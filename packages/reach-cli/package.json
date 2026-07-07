@@ -1,0 +1,15 @@
+{
+  "name": "@usepolder/reach",
+  "version": "0.1.0",
+  "description": "One number for design system adoption. Scan any React repo and get its Reach score.",
+  "license": "Apache-2.0",
+  "author": "Polder HQ",
+  "main": "src/index.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@usepolder/core": "0.1.0",
+    "picocolors": "^1.1.0"
+  }
+}

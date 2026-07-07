@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`render > prints the score block for the mixed fixture 1`] = `
+"Polder Reach
+Score: 40.0%   (6 DS / 15 countable instances)
+  DS components          6
+  Other components       4
+  Styled host elements   5
+5 files scanned
+1 file(s) could not be parsed and were skipped"
+`;

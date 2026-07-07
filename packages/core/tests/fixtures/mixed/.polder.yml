@@ -1,0 +1,5 @@
+component_library: "@acme/ds"
+reach:
+  exclude:
+    - "**/*.test.*"
+    - "**/*.stories.*"

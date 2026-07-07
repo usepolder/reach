@@ -1,0 +1,136 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`scanRepo > mixed fixture → score per the denominator ruling 1`] = `
+{
+  "componentsOnlyScore": 60,
+  "counts": {
+    "countable": 15,
+    "dsInstances": 6,
+    "filesFailed": 1,
+    "filesScanned": 5,
+    "otherComponents": 4,
+    "styledHosts": 5,
+    "unstyledHosts": 2,
+  },
+  "files": [
+    {
+      "ds": 5,
+      "file": "src/App.tsx",
+      "other": 2,
+      "styledHosts": 2,
+      "unstyledHosts": 1,
+    },
+    {
+      "ds": 1,
+      "file": "src/Fragments.tsx",
+      "other": 0,
+      "styledHosts": 0,
+      "unstyledHosts": 0,
+    },
+    {
+      "ds": 0,
+      "file": "src/Hero.tsx",
+      "other": 0,
+      "styledHosts": 2,
+      "unstyledHosts": 1,
+    },
+    {
+      "ds": 0,
+      "file": "src/LegacyCard.tsx",
+      "other": 2,
+      "styledHosts": 1,
+      "unstyledHosts": 0,
+    },
+    {
+      "ds": 0,
+      "file": "src/broken.tsx",
+      "other": 0,
+      "parseFailed": true,
+      "styledHosts": 0,
+      "unstyledHosts": 0,
+    },
+  ],
+  "leaks": {
+    "hexColors": 0,
+    "items": [],
+    "pxValues": 0,
+    "total": 0,
+  },
+  "schemaVersion": 1,
+  "score": 40,
+  "tool": "reach",
+}
+`;
+
+exports[`scanRepo > no-ds fixture → 0% score 1`] = `
+{
+  "componentsOnlyScore": 0,
+  "counts": {
+    "countable": 3,
+    "dsInstances": 0,
+    "filesFailed": 0,
+    "filesScanned": 1,
+    "otherComponents": 2,
+    "styledHosts": 1,
+    "unstyledHosts": 0,
+  },
+  "files": [
+    {
+      "ds": 0,
+      "file": "src/App.tsx",
+      "other": 2,
+      "styledHosts": 1,
+      "unstyledHosts": 0,
+    },
+  ],
+  "leaks": {
+    "hexColors": 0,
+    "items": [],
+    "pxValues": 0,
+    "total": 0,
+  },
+  "schemaVersion": 1,
+  "score": 0,
+  "tool": "reach",
+}
+`;
+
+exports[`scanRepo > pure-ds fixture → 100% score 1`] = `
+{
+  "componentsOnlyScore": 100,
+  "counts": {
+    "countable": 6,
+    "dsInstances": 6,
+    "filesFailed": 0,
+    "filesScanned": 2,
+    "otherComponents": 0,
+    "styledHosts": 0,
+    "unstyledHosts": 3,
+  },
+  "files": [
+    {
+      "ds": 4,
+      "file": "src/App.tsx",
+      "other": 0,
+      "styledHosts": 0,
+      "unstyledHosts": 2,
+    },
+    {
+      "ds": 2,
+      "file": "src/Nav.tsx",
+      "other": 0,
+      "styledHosts": 0,
+      "unstyledHosts": 1,
+    },
+  ],
+  "leaks": {
+    "hexColors": 0,
+    "items": [],
+    "pxValues": 0,
+    "total": 0,
+  },
+  "schemaVersion": 1,
+  "score": 100,
+  "tool": "reach",
+}
+`;

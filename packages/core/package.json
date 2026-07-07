@@ -1,0 +1,22 @@
+{
+  "name": "@usepolder/core",
+  "version": "0.1.0",
+  "description": "Shared scanner engine for Polder tools (Reach, and later Drift).",
+  "license": "Apache-2.0",
+  "author": "Polder HQ",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0",
+    "@babel/traverse": "^7.24.0",
+    "@babel/types": "^7.24.0",
+    "fast-glob": "^3.3.2",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/babel__traverse": "^7.28.0"
+  }
+}
