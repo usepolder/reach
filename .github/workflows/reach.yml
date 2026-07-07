@@ -1,0 +1,15 @@
+# Dogfood: run the Reach action on this repo's own fixtures (see root .polder.yml).
+name: Reach
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./

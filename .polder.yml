@@ -1,0 +1,5 @@
+# Dogfood config: the Reach action scans this repo's own test fixtures.
+component_library: "@acme/ds"
+reach:
+  include: ["packages/core/tests/fixtures/**"]
+  exclude: ["**/*.test.*", "**/*.stories.*", "**/tokens.ts"]

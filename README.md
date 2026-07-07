@@ -37,12 +37,33 @@ reach:
 
 Zero-config run: `reach --library "@acme/design-system"`.
 
+## GitHub Action
+
+Posts one PR comment (updated in place on every push) with the score, the delta vs the base branch, and the leak count. Also writes the workflow step summary and sets `score`, `base-score`, and `leaks` outputs.
+
+```yaml
+name: Reach
+on: [pull_request]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  reach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: usepolder/reach@main
+```
+
+The base-branch comparison scans the PR base commit in a temporary git worktree. If the base can't be fetched (fork PRs with restricted tokens, unusual checkouts), the comment ships score-only.
+
 ## Repo layout
 
 npm workspaces:
 
 - `packages/core` holds `@usepolder/core`, the scanner engine (walk, import maps, instance classification, versioned JSON report).
 - `packages/reach-cli` holds `@usepolder/reach`, the CLI.
+- `packages/reach-action` holds the GitHub Action (bundled with ncc; `action.yml` lives at the repo root). Rebuild with `npm run build:action` and commit `packages/reach-action/dist`.
 
 ```sh
 npm install
@@ -52,4 +73,4 @@ npm run reach -- <path-to-repo> [--library <pkg>] [--json]
 
 ## Status
 
-v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations). Next: M3 GitHub Action, M4 badge, M5 npm + Marketplace ship.
+v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations), M3 (GitHub Action: upserted PR comment, base-branch delta via git worktree, step summary). Next: M4 badge, M5 npm + Marketplace ship.

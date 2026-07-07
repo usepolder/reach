@@ -1,5 +1,9 @@
 node_modules/
 lib/
-dist/
 *.tsbuildinfo
 .DS_Store
+
+# built output stays out of git, except the committed Action bundle
+dist/
+!packages/reach-action/dist/
+!packages/reach-action/dist/**

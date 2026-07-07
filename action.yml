@@ -1,0 +1,28 @@
+name: 'Polder Reach'
+description: 'One number for design system adoption: posts your Reach score on every PR'
+author: 'Polder HQ'
+branding:
+  icon: 'target'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'GitHub token with pull-requests: write permission'
+    required: true
+    default: ${{ github.token }}
+  working-directory:
+    description: 'Directory containing .polder.yml (and the code to scan)'
+    required: false
+    default: '.'
+
+outputs:
+  score:
+    description: 'The Reach score on the scanned commit (0-100, one decimal)'
+  base-score:
+    description: 'The Reach score on the PR base commit, when it could be computed'
+  leaks:
+    description: 'Total leak count (hex colors + hardcoded px)'
+
+runs:
+  using: node20
+  main: packages/reach-action/dist/index.js
