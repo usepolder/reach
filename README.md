@@ -16,10 +16,10 @@ Reach score = **DS instances / (DS instances + other component instances + style
 
 Counted per JSX opening element, full-repo:
 
-- **DS instance** — a capitalized JSX element that resolves (via the file's import map) to a package listed in `component_library`, including subpath imports (`@acme/ds/Button` counts for `@acme/ds`) and member expressions (`<Table.Row>` resolves `Table`).
-- **Other component instance** — a capitalized element resolving anywhere else: local components, other libraries.
-- **Styled host element** — a lowercase element (`div`, `span`, `button`) carrying a `className` or `style` attribute. A div with className soup is UI that bypassed the system, so it counts against you.
-- **Excluded** — fragments and unstyled host elements (layout glue).
+- **DS instance:** a capitalized JSX element that resolves (via the file's import map) to a package listed in `component_library`, including subpath imports (`@acme/ds/Button` counts for `@acme/ds`) and member expressions (`<Table.Row>` resolves `Table`).
+- **Other component instance:** a capitalized element resolving anywhere else: local components, other libraries.
+- **Styled host element:** a lowercase element (`div`, `span`, `button`) carrying a `className` or `style` attribute. A div with className soup is UI that bypassed the system, so it counts against you.
+- **Excluded:** fragments and unstyled host elements (layout glue).
 
 The formula is **not configurable**. A score you can tune is a score nobody trusts. `reach.fail_under` gates CI; it never changes the number.
 
@@ -41,8 +41,8 @@ Zero-config run: `reach --library "@acme/design-system"`.
 
 npm workspaces:
 
-- `packages/core` — `@usepolder/core`, the scanner engine (walk, import maps, instance classification, versioned JSON report).
-- `packages/reach-cli` — `@usepolder/reach`, the CLI.
+- `packages/core` holds `@usepolder/core`, the scanner engine (walk, import maps, instance classification, versioned JSON report).
+- `packages/reach-cli` holds `@usepolder/reach`, the CLI.
 
 ```sh
 npm install
