@@ -1,0 +1,6 @@
+.legacy-banner {
+  color: #ff8800;
+  padding: 12px;
+  margin: 0px; /* zero is not a hardcoded size */
+  border: 1px solid #00ff0080;
+}

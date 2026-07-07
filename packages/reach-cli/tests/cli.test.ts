@@ -15,6 +15,8 @@ describe('render', () => {
     expect(out).toContain('Score: 40.0%');
     expect(out).toContain('(6 DS / 15 countable instances)');
     expect(out).toContain('DS components');
+    expect(out).toContain('Leaks: 6   (3 hex colors, 3 px values)');
+    expect(out).toContain('Top offenders:');
     expect(out).toContain('could not be parsed');
     expect(out).toMatchSnapshot();
   });

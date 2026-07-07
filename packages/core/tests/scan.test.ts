@@ -41,6 +41,24 @@ describe('scanRepo', () => {
     expect(report.files.find((f) => f.file === 'src/broken.tsx')?.parseFailed).toBe(true);
     // App.test.tsx excluded via the fixture's .polder.yml
     expect(report.files.some((f) => f.file.includes('.test.'))).toBe(false);
+
+    // Leaks: #ff0000 + '16px' in LegacyCard.tsx, #ff8800/#00ff0080 + 12px/1px in
+    // theme.css. tokens.ts is excluded via glob, so its hex/px must not appear.
+    expect(report.leaks).toMatchObject({ total: 6, hexColors: 3, pxValues: 3 });
+    expect(report.leaks.items).toContainEqual({
+      file: 'src/LegacyCard.tsx',
+      line: 7,
+      kind: 'hex',
+      value: '#ff0000',
+    });
+    expect(report.leaks.items).toContainEqual({
+      file: 'src/theme.css',
+      line: 3,
+      kind: 'px',
+      value: '12px',
+    });
+    expect(report.leaks.items.some((i) => i.file === 'src/tokens.ts')).toBe(false);
+    expect(report.leaks.items.some((i) => i.value === '0px')).toBe(false);
     expect(report).toMatchSnapshot();
   });
 

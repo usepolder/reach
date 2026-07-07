@@ -30,6 +30,25 @@ export function render(report: ReachReport): string {
     lines.push(row('Styled host elements', counts.styledHosts));
   }
 
+  const { leaks } = report;
+  if (leaks.total === 0) {
+    lines.push(`Leaks: ${pc.green('0')}`);
+  } else {
+    lines.push(
+      `Leaks: ${pc.yellow(pc.bold(String(leaks.total)))}   ` +
+        pc.dim(`(${leaks.hexColors} hex colors, ${leaks.pxValues} px values)`),
+    );
+    const perFile = new Map<string, number>();
+    for (const item of leaks.items) {
+      perFile.set(item.file, (perFile.get(item.file) ?? 0) + 1);
+    }
+    const offenders = [...perFile.entries()]
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+      .slice(0, 3)
+      .map(([file, n]) => `${file} (${n})`);
+    lines.push(pc.dim(`  Top offenders: ${offenders.join(', ')}`));
+  }
+
   lines.push(pc.dim(`${counts.filesScanned} files scanned`));
   if (counts.filesFailed > 0) {
     lines.push(

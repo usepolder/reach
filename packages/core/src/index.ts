@@ -22,4 +22,5 @@ export {
   type LeakCounts,
   type LeakItem,
 } from './report';
+export { findLeaks, buildLeakCounts } from './leaks';
 export { scanRepo } from './scan';

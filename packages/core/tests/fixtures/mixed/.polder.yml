@@ -3,3 +3,4 @@ reach:
   exclude:
     - "**/*.test.*"
     - "**/*.stories.*"
+    - "src/tokens.ts"

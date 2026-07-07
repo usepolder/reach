@@ -52,4 +52,4 @@ npm run reach -- <path-to-repo> [--library <pkg>] [--json]
 
 ## Status
 
-v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI). Next: M2 leaks (hex/px detection), M3 GitHub Action, M4 badge, M5 npm + Marketplace ship.
+v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations). Next: M3 GitHub Action, M4 badge, M5 npm + Marketplace ship.
