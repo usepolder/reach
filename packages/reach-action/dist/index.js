@@ -44991,6 +44991,75 @@ function walk(cwd, include, exclude, extensions) {
 
 /***/ }),
 
+/***/ 9169:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BADGE_SVG = exports.BADGE_JSON = exports.BADGE_DIR = void 0;
+exports.badgeColor = badgeColor;
+exports.badgeJson = badgeJson;
+exports.badgeSvg = badgeSvg;
+exports.BADGE_DIR = '.polder';
+exports.BADGE_JSON = 'reach-badge.json';
+exports.BADGE_SVG = 'reach-badge.svg';
+// shields.io color names and their hex values (for the static SVG).
+const BANDS = [
+    { min: 80, name: 'brightgreen', hex: '#4c1' },
+    { min: 60, name: 'green', hex: '#97ca00' },
+    { min: 40, name: 'yellow', hex: '#dfb317' },
+    { min: 20, name: 'orange', hex: '#fe7d37' },
+    { min: 0, name: 'red', hex: '#e05d44' },
+];
+function badgeColor(score) {
+    const band = BANDS.find((b) => score >= b.min) ?? BANDS[BANDS.length - 1];
+    return { name: band.name, hex: band.hex };
+}
+function message(report) {
+    return report.counts.countable === 0 ? 'n/a' : `${report.score.toFixed(1)}%`;
+}
+function badgeJson(report) {
+    const noData = report.counts.countable === 0;
+    return `${JSON.stringify({
+        schemaVersion: 1,
+        label: 'reach',
+        message: message(report),
+        color: noData ? 'lightgrey' : badgeColor(report.score).name,
+    }, null, 2)}\n`;
+}
+// Approximate Verdana 11px text width, the same ballpark shields.io uses.
+function textWidth(text) {
+    return Math.round(text.length * 6.5) + 10;
+}
+function badgeSvg(report) {
+    const label = 'reach';
+    const value = message(report);
+    const hex = report.counts.countable === 0 ? '#9f9f9f' : badgeColor(report.score).hex;
+    const lw = textWidth(label);
+    const vw = textWidth(value);
+    const w = lw + vw;
+    const font = 'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11"';
+    return [
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="20" role="img" aria-label="${label}: ${value}">`,
+        `  <title>${label}: ${value}</title>`,
+        `  <clipPath id="r"><rect width="${w}" height="20" rx="3" fill="#fff"/></clipPath>`,
+        `  <g clip-path="url(#r)">`,
+        `    <rect width="${lw}" height="20" fill="#555"/>`,
+        `    <rect x="${lw}" width="${vw}" height="20" fill="${hex}"/>`,
+        `  </g>`,
+        `  <g fill="#fff" text-anchor="middle" ${font}>`,
+        `    <text x="${lw / 2}" y="14">${label}</text>`,
+        `    <text x="${lw + vw / 2}" y="14">${value}</text>`,
+        `  </g>`,
+        `</svg>`,
+        '',
+    ].join('\n');
+}
+
+
+/***/ }),
+
 /***/ 5119:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -45084,6 +45153,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.repoToplevel = repoToplevel;
+exports.commitAndPush = commitAndPush;
 exports.scanBaseRef = scanBaseRef;
 // Base-branch scan via a temporary git worktree, per the M3 ruling. Every git
 // failure degrades to null (score-only comment) rather than breaking the run,
@@ -45105,18 +45176,58 @@ function git(cwd, args) {
         return null;
     }
 }
+/** Repo toplevel for a checkout dir, or null when not a git repo. */
+function repoToplevel(workdir) {
+    return git(workdir, ['rev-parse', '--show-toplevel'])?.trim() ?? null;
+}
+/**
+ * Stage `paths`, commit, and push, as the github-actions bot. Returns
+ * 'unchanged' when the staged content matches HEAD (no commit made), so badge
+ * refreshes never produce empty commits or push loops.
+ */
+function commitAndPush(repoRoot, paths, message, warn) {
+    if (git(repoRoot, ['add', '--', ...paths]) === null) {
+        warn('Polder Reach: git add failed, badge not committed');
+        return 'failed';
+    }
+    try {
+        (0, child_process_1.execFileSync)('git', ['diff', '--cached', '--quiet', '--', ...paths], {
+            cwd: repoRoot,
+            stdio: 'ignore',
+        });
+        return 'unchanged'; // exit 0: nothing staged differs from HEAD
+    }
+    catch {
+        // exit 1: there are staged changes — fall through and commit them
+    }
+    const author = [
+        '-c',
+        'user.name=github-actions[bot]',
+        '-c',
+        'user.email=41898282+github-actions[bot]@users.noreply.github.com',
+    ];
+    if (git(repoRoot, [...author, 'commit', '-m', message, '--', ...paths]) === null) {
+        warn('Polder Reach: git commit failed, badge not committed');
+        return 'failed';
+    }
+    if (git(repoRoot, ['push']) === null) {
+        warn('Polder Reach: git push failed, badge commit not published. ' +
+            'Does the workflow have contents: write permission?');
+        return 'failed';
+    }
+    return 'committed';
+}
 /**
  * Scan the base commit of a PR. Uses the head checkout's config for both sides
  * so the two scores are comparable. Returns null when anything git-related
  * fails (shallow clone without fetch access, missing workdir on base, ...).
  */
 function scanBaseRef(workdir, baseSha, config, warn) {
-    const topOut = git(workdir, ['rev-parse', '--show-toplevel']);
-    if (!topOut) {
+    const repoRoot = repoToplevel(workdir);
+    if (!repoRoot) {
         warn('Polder Reach: not a git checkout, skipping base comparison');
         return null;
     }
-    const repoRoot = topOut.trim();
     const rel = path.relative(repoRoot, workdir);
     // actions/checkout defaults to depth 1; fetch just the base commit if missing.
     if (!git(repoRoot, ['rev-parse', '--verify', '--quiet', `${baseSha}^{commit}`])) {
@@ -45288,8 +45399,36 @@ const core = __importStar(__nccwpck_require__(7184));
 const github = __importStar(__nccwpck_require__(5683));
 const core_1 = __nccwpck_require__(5026);
 const comment_1 = __nccwpck_require__(5119);
+const badge_1 = __nccwpck_require__(9169);
 const git_1 = __nccwpck_require__(8090);
 const github_1 = __nccwpck_require__(3491);
+/**
+ * On a push to the default branch, refresh the committed badge files
+ * (.polder/reach-badge.json + .svg). The [skip ci] commit and the
+ * content-unchanged check both prevent push loops.
+ */
+function updateBadge(workdir, report) {
+    const ctx = github.context;
+    const defaultBranch = ctx.payload.repository?.default_branch;
+    if (ctx.eventName !== 'push' || !defaultBranch || ctx.ref !== `refs/heads/${defaultBranch}`) {
+        return;
+    }
+    const repoRoot = (0, git_1.repoToplevel)(workdir);
+    if (!repoRoot) {
+        core.warning('Polder Reach: not a git checkout, badge not updated');
+        return;
+    }
+    const dir = path.join(repoRoot, badge_1.BADGE_DIR);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, badge_1.BADGE_JSON), (0, badge_1.badgeJson)(report));
+    fs.writeFileSync(path.join(dir, badge_1.BADGE_SVG), (0, badge_1.badgeSvg)(report));
+    const result = (0, git_1.commitAndPush)(repoRoot, [path.join(badge_1.BADGE_DIR, badge_1.BADGE_JSON), path.join(badge_1.BADGE_DIR, badge_1.BADGE_SVG)], 'chore: update Reach badge [skip ci]', (m) => core.warning(m));
+    if (result !== 'failed') {
+        core.info(result === 'committed'
+            ? `Polder Reach: badge updated (${report.score.toFixed(1)}%)`
+            : 'Polder Reach: badge already up to date');
+    }
+}
 async function run() {
     const workdir = path.resolve(core.getInput('working-directory') || '.');
     const configPath = path.join(workdir, '.polder.yml');
@@ -45328,6 +45467,7 @@ async function run() {
     }
     else {
         core.info('Polder Reach: not a pull_request event, skipping the PR comment');
+        updateBadge(workdir, report);
     }
     if (config.reach.failUnder > 0 && report.score < config.reach.failUnder) {
         core.setFailed(`Reach score ${report.score.toFixed(1)}% is below fail_under (${config.reach.failUnder}%)`);

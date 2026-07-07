@@ -1,10 +1,13 @@
 # Dogfood: run the Reach action on this repo's own fixtures (see root .polder.yml).
+# PRs get the score comment; pushes to main refresh the committed badge.
 name: Reach
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:

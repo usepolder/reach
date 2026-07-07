@@ -6,8 +6,44 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { parseConfig, scanRepo, type ReachReport } from '@usepolder/core';
 import { renderComment } from './comment';
-import { scanBaseRef } from './git';
+import { badgeJson, badgeSvg, BADGE_DIR, BADGE_JSON, BADGE_SVG } from './badge';
+import { commitAndPush, repoToplevel, scanBaseRef } from './git';
 import { upsertComment } from './github';
+
+/**
+ * On a push to the default branch, refresh the committed badge files
+ * (.polder/reach-badge.json + .svg). The [skip ci] commit and the
+ * content-unchanged check both prevent push loops.
+ */
+function updateBadge(workdir: string, report: ReachReport): void {
+  const ctx = github.context;
+  const defaultBranch = ctx.payload.repository?.default_branch as string | undefined;
+  if (ctx.eventName !== 'push' || !defaultBranch || ctx.ref !== `refs/heads/${defaultBranch}`) {
+    return;
+  }
+  const repoRoot = repoToplevel(workdir);
+  if (!repoRoot) {
+    core.warning('Polder Reach: not a git checkout, badge not updated');
+    return;
+  }
+  const dir = path.join(repoRoot, BADGE_DIR);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, BADGE_JSON), badgeJson(report));
+  fs.writeFileSync(path.join(dir, BADGE_SVG), badgeSvg(report));
+  const result = commitAndPush(
+    repoRoot,
+    [path.join(BADGE_DIR, BADGE_JSON), path.join(BADGE_DIR, BADGE_SVG)],
+    'chore: update Reach badge [skip ci]',
+    (m) => core.warning(m),
+  );
+  if (result !== 'failed') {
+    core.info(
+      result === 'committed'
+        ? `Polder Reach: badge updated (${report.score.toFixed(1)}%)`
+        : 'Polder Reach: badge already up to date',
+    );
+  }
+}
 
 async function run(): Promise<void> {
   const workdir = path.resolve(core.getInput('working-directory') || '.');
@@ -58,6 +94,7 @@ async function run(): Promise<void> {
     await upsertComment(github.getOctokit(token), github.context.repo, pr.number, body);
   } else {
     core.info('Polder Reach: not a pull_request event, skipping the PR comment');
+    updateBadge(workdir, report);
   }
 
   if (config.reach.failUnder > 0 && report.score < config.reach.failUnder) {

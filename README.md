@@ -1,5 +1,7 @@
 # Polder Reach
 
+![Reach](.polder/reach-badge.svg)
+
 One number for design system adoption. Reach scans a React repo and answers: **of all the UI you rendered, how much came from your design system?**
 
 ```
@@ -57,6 +59,24 @@ jobs:
 
 The base-branch comparison scans the PR base commit in a temporary git worktree. If the base can't be fetched (fork PRs with restricted tokens, unusual checkouts), the comment ships score-only.
 
+## Badge (zero infra)
+
+On every push to the default branch the action writes and commits two files, then embeds are just markdown. No hosted service.
+
+- **Public repos** (shields.io endpoint mode):
+
+  ```md
+  ![Reach](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/.polder/reach-badge.json)
+  ```
+
+- **Private repos** (committed static SVG, since shields.io can't fetch private raw files):
+
+  ```md
+  ![Reach](.polder/reach-badge.svg)
+  ```
+
+The badge commit is `chore: update Reach badge [skip ci]` and is skipped entirely when the score didn't change. The workflow needs `contents: write` permission on push.
+
 ## Repo layout
 
 npm workspaces:
@@ -73,4 +93,4 @@ npm run reach -- <path-to-repo> [--library <pkg>] [--json]
 
 ## Status
 
-v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations), M3 (GitHub Action: upserted PR comment, base-branch delta via git worktree, step summary). Next: M4 badge, M5 npm + Marketplace ship.
+v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations), M3 (GitHub Action: upserted PR comment, base-branch delta via git worktree, step summary), M4 (zero-infra badge: shields.io endpoint JSON + static SVG fallback, committed by the action). Next: M5 npm + Marketplace ship.
