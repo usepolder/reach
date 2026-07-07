@@ -1,13 +1,42 @@
 {
   "name": "@usepolder/core",
-  "version": "0.1.0",
-  "description": "Shared scanner engine for Polder tools (Reach, and later Drift).",
+  "version": "1.0.0",
+  "description": "Shared repo-scanner engine for Polder tools: JSX instance classification, leak detection, and the versioned Reach report.",
   "license": "Apache-2.0",
   "author": "Polder HQ",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "homepage": "https://github.com/usepolder/reach#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usepolder/reach.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/usepolder/reach/issues"
+  },
+  "keywords": [
+    "design-system",
+    "adoption",
+    "react",
+    "jsx",
+    "scanner",
+    "static-analysis"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "engines": {
     "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",

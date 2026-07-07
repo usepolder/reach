@@ -1,6 +1,6 @@
 {
   "name": "@usepolder/reach-action",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "GitHub Action wrapper for Polder Reach.",
   "license": "Apache-2.0",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@actions/github": "^6.0.0",
-    "@usepolder/core": "0.1.0"
+    "@usepolder/core": "^1.0.0"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.38.1"

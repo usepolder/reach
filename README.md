@@ -1,8 +1,14 @@
 # Polder Reach
 
-![Reach](.polder/reach-badge.svg)
+![Reach](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/usepolder/reach/main/.polder/reach-badge.json)
 
 One number for design system adoption. Reach scans a React repo and answers: **of all the UI you rendered, how much came from your design system?**
+
+## Try it now
+
+```sh
+npx @usepolder/reach --library "@your/design-system"
+```
 
 ```
 Polder Reach
@@ -10,7 +16,11 @@ Score: 68.4%   (412 DS / 602 countable instances)
   DS components        412
   Other components     134
   Styled host elements  56
+Leaks: 87   (61 hex colors, 26 px values)
+  Top offenders: src/styles/legacy.css (34), src/components/Hero.tsx (12)
 ```
+
+Zero config beyond your design system's package name. Add `--json` for the full machine-readable report. See it running on a real repo: [usepolder/reach-demo](https://github.com/usepolder/reach-demo).
 
 ## The metric
 
@@ -54,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: usepolder/reach@main
+      - uses: usepolder/reach@v1
 ```
 
 The base-branch comparison scans the PR base commit in a temporary git worktree. If the base can't be fetched (fork PRs with restricted tokens, unusual checkouts), the comment ships score-only.
@@ -81,8 +91,8 @@ The badge commit is `chore: update Reach badge [skip ci]` and is skipped entirel
 
 npm workspaces:
 
-- `packages/core` holds `@usepolder/core`, the scanner engine (walk, import maps, instance classification, versioned JSON report).
-- `packages/reach-cli` holds `@usepolder/reach`, the CLI.
+- `packages/core` holds [`@usepolder/core`](https://www.npmjs.com/package/@usepolder/core), the scanner engine (walk, import maps, instance classification, leaks, versioned JSON report).
+- `packages/reach-cli` holds [`@usepolder/reach`](https://www.npmjs.com/package/@usepolder/reach), the CLI (`polder-reach` bin).
 - `packages/reach-action` holds the GitHub Action (bundled with ncc; `action.yml` lives at the repo root). Rebuild with `npm run build:action` and commit `packages/reach-action/dist`.
 
 ```sh
@@ -91,6 +101,8 @@ npm test
 npm run reach -- <path-to-repo> [--library <pkg>] [--json]
 ```
 
+Releasing: `npm run build`, then `npm publish -w @usepolder/core -w @usepolder/reach`; tag `vX.Y.Z`, move the `v1` tag, and create a GitHub release for the Marketplace.
+
 ## Status
 
-v1 in progress. Done: M0 (scaffolding), M1 (engine + CLI), M2 (leaks: hex colors and hardcoded px, with file/line locations), M3 (GitHub Action: upserted PR comment, base-branch delta via git worktree, step summary), M4 (zero-infra badge: shields.io endpoint JSON + static SVG fallback, committed by the action). Next: M5 npm + Marketplace ship.
+v1.0.0. CLI (`npx @usepolder/reach`), GitHub Action (PR comment with base-branch delta), and zero-infra badge. On the roadmap: Azure DevOps task, monorepo per-package scores.

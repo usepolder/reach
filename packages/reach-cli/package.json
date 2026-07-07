@@ -1,15 +1,50 @@
 {
   "name": "@usepolder/reach",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "One number for design system adoption. Scan any React repo and get its Reach score.",
   "license": "Apache-2.0",
   "author": "Polder HQ",
-  "main": "src/index.ts",
+  "homepage": "https://github.com/usepolder/reach#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usepolder/reach.git",
+    "directory": "packages/reach-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/usepolder/reach/issues"
+  },
+  "keywords": [
+    "design-system",
+    "adoption",
+    "reach",
+    "react",
+    "components",
+    "cli",
+    "metrics",
+    "code-quality"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "bin": {
+    "polder-reach": "lib/cli.js"
+  },
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "engines": {
     "node": ">=20"
   },
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@usepolder/core": "0.1.0",
+    "@usepolder/core": "^1.0.0",
     "picocolors": "^1.1.0"
   }
 }
