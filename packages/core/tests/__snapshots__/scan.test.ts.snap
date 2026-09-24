@@ -93,9 +93,15 @@ exports[`scanRepo > mixed fixture → score per the denominator ruling 1`] = `
     "pxValues": 3,
     "total": 6,
   },
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "score": 40,
   "tool": "reach",
+  "usage": {
+    "Banner": 1,
+    "Button": 2,
+    "Table": 2,
+    "Tag": 1,
+  },
 }
 `;
 
@@ -133,9 +139,10 @@ exports[`scanRepo > no-ds fixture → 0% score 1`] = `
     "pxValues": 1,
     "total": 1,
   },
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "score": 0,
   "tool": "reach",
+  "usage": {},
 }
 `;
 
@@ -173,8 +180,15 @@ exports[`scanRepo > pure-ds fixture → 100% score 1`] = `
     "pxValues": 0,
     "total": 0,
   },
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "score": 100,
   "tool": "reach",
+  "usage": {
+    "Button": 1,
+    "Card": 1,
+    "Icon": 1,
+    "Table": 2,
+    "Text": 1,
+  },
 }
 `;

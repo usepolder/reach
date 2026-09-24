@@ -124,3 +124,36 @@ describe('classifyInstances — nesting', () => {
     expect(classify(code)[0].line).toBe(3);
   });
 });
+
+describe('classifyInstances — component identity', () => {
+  const componentOf = (code: string) => classify(code).map((i) => i.component);
+
+  it('a named import is identified by its exported name', () => {
+    expect(componentOf(`import { Button } from '@acme/ds';\nconst A = () => <Button />;`)).toEqual(['Button']);
+  });
+
+  it('a renamed import resolves to the exported name, not the alias', () => {
+    expect(componentOf(`import { Button as Btn } from '@acme/ds';\nconst A = () => <Btn />;`)).toEqual(['Button']);
+  });
+
+  it('a compound component rolls up to its parent', () => {
+    expect(componentOf(`import { Table } from '@acme/ds';\nconst A = () => <Table.Row />;`)).toEqual(['Table']);
+  });
+
+  it('a namespace import is identified by the member', () => {
+    expect(componentOf(`import * as DS from '@acme/ds';\nconst A = () => <DS.Button />;`)).toEqual(['Button']);
+    expect(componentOf(`import * as DS from '@acme/ds';\nconst A = () => <DS.Table.Row />;`)).toEqual(['Table']);
+  });
+
+  it('a default import from a subpath is identified by the path', () => {
+    expect(componentOf(`import Ico from '@acme/ds/Icon';\nconst A = () => <Ico />;`)).toEqual(['Icon']);
+  });
+
+  it('a default import from the package root falls back to the local name', () => {
+    expect(componentOf(`import Thing from '@acme/ds';\nconst A = () => <Thing />;`)).toEqual(['Thing']);
+  });
+
+  it('non-DS instances carry no component', () => {
+    expect(componentOf(`import { Card } from '@mui/material';\nconst A = () => <Card />;`)).toEqual([undefined]);
+  });
+});

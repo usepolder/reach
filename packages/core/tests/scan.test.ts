@@ -37,6 +37,10 @@ describe('scanRepo', () => {
     expect(report.counts.countable).toBe(15);
     expect(report.score).toBe(40);
     expect(report.componentsOnlyScore).toBe(60);
+    // Sub-components roll up to the parent; usage accounts for every DS instance.
+    expect(report.usage).toEqual({ Button: 2, Table: 2, Banner: 1, Tag: 1 });
+    expect(Object.values(report.usage).reduce((a, b) => a + b, 0)).toBe(report.counts.dsInstances);
+    expect(report.files.every((f) => !('usage' in f))).toBe(true);
     expect(report.counts.filesFailed).toBe(1);
     expect(report.files.find((f) => f.file === 'src/broken.tsx')?.parseFailed).toBe(true);
     // App.test.tsx excluded via the fixture's .polder.yml
