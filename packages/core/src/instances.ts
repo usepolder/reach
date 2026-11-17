@@ -5,7 +5,7 @@ import type {
 } from '@babel/types';
 import traverseModule from '@babel/traverse';
 import type { Ast } from './parse';
-import type { ImportMap } from './imports';
+import type { ImportBinding, ImportMap } from './imports';
 
 // @babel/traverse ships CJS with the function on `default`; depending on how the
 // consumer bundles/loads this file the import binding is either the function or
@@ -23,6 +23,13 @@ export interface Instance {
   line: number;
   /** The matched component_library package, when kind is 'ds'. */
   dsPackage?: string;
+  /**
+   * The design-system component this renders, when kind is 'ds': the exported
+   * name (`Button`, even for `import { Button as Btn }`), or for a namespace
+   * import the member (`DS.Button` → `Button`). Sub-components roll up to
+   * their parent, so `Table.Row` counts as `Table`.
+   */
+  component?: string;
 }
 
 /** True when `source` is `pkg` itself or a subpath of it (`@acme/ds/Button`). */
@@ -65,6 +72,31 @@ function classifyHost(node: JSXOpeningElement, name: string, line: number): Inst
   return { element: name, kind: isStyled(node) ? 'styled-host' : 'unstyled-host', line };
 }
 
+/**
+ * Which design-system component a resolved binding stands for.
+ *
+ * A default import has no export name, so a subpath import names it by its
+ * path (`@acme/ds/Icon` → `Icon`). A default import from the package root has
+ * neither, and falls back to the local name — the best identity available.
+ */
+function componentName(
+  binding: ImportBinding,
+  pkg: string,
+  localName: string,
+  element: string,
+): string {
+  if (binding.kind === 'named' && binding.imported) return binding.imported;
+  if (binding.kind === 'namespace') {
+    const member = element.split('.')[1];
+    return member ?? localName;
+  }
+  if (binding.kind === 'default' && binding.source !== pkg) {
+    const last = binding.source.split('/').pop();
+    if (last) return last;
+  }
+  return localName;
+}
+
 function classifyComponent(
   localName: string,
   element: string,
@@ -75,7 +107,15 @@ function classifyComponent(
   const binding = importMap.get(localName);
   if (binding) {
     const pkg = dsPackages.find((p) => matchesPackage(binding.source, p));
-    if (pkg) return { element, kind: 'ds', line, dsPackage: pkg };
+    if (pkg) {
+      return {
+        element,
+        kind: 'ds',
+        line,
+        dsPackage: pkg,
+        component: componentName(binding, pkg, localName, element),
+      };
+    }
   }
   // Imported from elsewhere, or not imported at all (defined in this file):
   // a component instance that isn't the design system.

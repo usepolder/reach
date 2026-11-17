@@ -44504,7 +44504,8 @@ function buildImportMap(ast) {
         const source = node.source.value;
         for (const spec of node.specifiers) {
             if (spec.type === 'ImportSpecifier') {
-                map.set(spec.local.name, { source, kind: 'named' });
+                const imported = spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value;
+                map.set(spec.local.name, { source, kind: 'named', imported });
             }
             else if (spec.type === 'ImportDefaultSpecifier') {
                 map.set(spec.local.name, { source, kind: 'default' });
@@ -44608,12 +44609,40 @@ function isStyled(node) {
 function classifyHost(node, name, line) {
     return { element: name, kind: isStyled(node) ? 'styled-host' : 'unstyled-host', line };
 }
+/**
+ * Which design-system component a resolved binding stands for.
+ *
+ * A default import has no export name, so a subpath import names it by its
+ * path (`@acme/ds/Icon` → `Icon`). A default import from the package root has
+ * neither, and falls back to the local name — the best identity available.
+ */
+function componentName(binding, pkg, localName, element) {
+    if (binding.kind === 'named' && binding.imported)
+        return binding.imported;
+    if (binding.kind === 'namespace') {
+        const member = element.split('.')[1];
+        return member ?? localName;
+    }
+    if (binding.kind === 'default' && binding.source !== pkg) {
+        const last = binding.source.split('/').pop();
+        if (last)
+            return last;
+    }
+    return localName;
+}
 function classifyComponent(localName, element, line, importMap, dsPackages) {
     const binding = importMap.get(localName);
     if (binding) {
         const pkg = dsPackages.find((p) => matchesPackage(binding.source, p));
-        if (pkg)
-            return { element, kind: 'ds', line, dsPackage: pkg };
+        if (pkg) {
+            return {
+                element,
+                kind: 'ds',
+                line,
+                dsPackage: pkg,
+                component: componentName(binding, pkg, localName, element),
+            };
+        }
     }
     // Imported from elsewhere, or not imported at all (defined in this file):
     // a component instance that isn't the design system.
@@ -44791,7 +44820,10 @@ exports.SCHEMA_VERSION = void 0;
 exports.emptyFileCounts = emptyFileCounts;
 exports.tallyInstances = tallyInstances;
 exports.buildReport = buildReport;
-exports.SCHEMA_VERSION = 1;
+// v2: adds `usage`, per-component DS instance counts. Additive, but Current
+// requires it, so a consumer can tell a v1 report (no usage data) from a v2
+// one with nothing in use.
+exports.SCHEMA_VERSION = 2;
 function ratio(numerator, denominator) {
     if (denominator === 0)
         return 0;
@@ -44803,8 +44835,12 @@ function emptyFileCounts(file) {
 function tallyInstances(file, instances) {
     const counts = emptyFileCounts(file);
     for (const inst of instances) {
-        if (inst.kind === 'ds')
+        if (inst.kind === 'ds') {
             counts.ds++;
+            const name = inst.component ?? inst.element;
+            counts.usage ??= {};
+            counts.usage[name] = (counts.usage[name] ?? 0) + 1;
+        }
         else if (inst.kind === 'other')
             counts.other++;
         else if (inst.kind === 'styled-host')
@@ -44820,7 +44856,11 @@ function buildReport(files, filesScanned, leaks) {
     let styledHosts = 0;
     let unstyledHosts = 0;
     let filesFailed = 0;
+    const tally = new Map();
     for (const f of files) {
+        for (const [name, n] of Object.entries(f.usage ?? {})) {
+            tally.set(name, (tally.get(name) ?? 0) + n);
+        }
         ds += f.ds;
         other += f.other;
         styledHosts += f.styledHosts;
@@ -44843,11 +44883,13 @@ function buildReport(files, filesScanned, leaks) {
             filesScanned,
             filesFailed,
         },
+        usage: Object.fromEntries([...tally].sort(([an, ac], [bn, bc]) => bc - ac || (an < bn ? -1 : an > bn ? 1 : 0))),
         leaks: leaks ?? { total: 0, hexColors: 0, pxValues: 0, items: [] },
         // Only files that contributed something (or failed to parse) appear —
         // keeps the JSON proportional to the UI surface, not the repo size.
         files: files
             .filter((f) => f.ds + f.other + f.styledHosts + f.unstyledHosts > 0 || f.parseFailed)
+            .map(({ usage: _usage, ...rest }) => rest)
             .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)),
     };
 }
