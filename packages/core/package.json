@@ -1,6 +1,6 @@
 {
   "name": "@usepolder/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shared repo-scanner engine for Polder tools: JSX instance classification, leak detection, and the versioned Reach report.",
   "license": "Apache-2.0",
   "author": "Polder HQ",

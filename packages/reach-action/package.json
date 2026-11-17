@@ -1,6 +1,6 @@
 {
   "name": "@usepolder/reach-action",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "GitHub Action wrapper for Polder Reach.",
   "license": "Apache-2.0",
