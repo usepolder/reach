@@ -1,0 +1,70 @@
+# Publishes on a version tag: v1.2.3 -> npm + a GitHub release.
+#
+# Reach had no release workflow: 1.0.0 was published by hand with a personal
+# token, which then expired. This pipeline removes the credential entirely —
+# npm authenticates with the workflow's own OIDC identity (trusted publishing),
+# configured per package on npmjs.com against this repository and this
+# workflow filename. There is nothing stored to leak and nothing to renew.
+name: Release
+
+on:
+  push:
+    # Full semver tags only. The moving major tag (v1) this workflow pushes
+    # below does NOT match, so it never re-triggers the run.
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write # create the GitHub release and move the major tag
+  id-token: write # required for trusted publishing and provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 24 ships npm 11. Trusted publishing needs npm >=11.5.1 and
+      # Node >=22.14.0, so Node 20 (npm 10) could never authenticate.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+
+      - name: Build packages and the Action bundle
+        run: npm run build:action
+
+      # `uses: usepolder/reach@v1` runs the committed bundle, not the source,
+      # so a stale dist would ship behaviour that does not match the tag.
+      - name: Fail if the committed Action bundle is stale
+        run: |
+          if ! git diff --quiet -- packages/reach-action/dist; then
+            echo "::error::packages/reach-action/dist is out of date."
+            echo "Run 'npm run build:action' and commit the result before tagging."
+            git diff --stat -- packages/reach-action/dist
+            exit 1
+          fi
+
+      # No NODE_AUTH_TOKEN: authentication is OIDC. Provenance is generated
+      # automatically under OIDC from a public repository, so --provenance is
+      # not passed. core publishes first because reach depends on it.
+      - name: Publish to npm
+        run: npm publish -w @usepolder/core -w @usepolder/reach
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # Move the floating major tag so `usepolder/reach@v1`, which the README
+      # tells people to pin, resolves to this release.
+      - name: Update the major version tag
+        run: |
+          MAJOR="v$(node -p "require('./packages/reach-cli/package.json').version.split('.')[0]")"
+          git tag -f "$MAJOR"
+          git push origin "$MAJOR" --force

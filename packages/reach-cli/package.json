@@ -1,6 +1,6 @@
 {
   "name": "@usepolder/reach",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "One number for design system adoption. Scan any React repo and get its Reach score.",
   "license": "Apache-2.0",
   "author": "Polder HQ",
