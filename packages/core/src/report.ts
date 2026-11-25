@@ -2,7 +2,10 @@
 // as an API: bump SCHEMA_VERSION on any breaking change, snapshot-test per fixture.
 import type { Instance } from './instances';
 
-export const SCHEMA_VERSION = 1;
+// v2: adds `usage`, per-component DS instance counts. Additive, but Current
+// requires it, so a consumer can tell a v1 report (no usage data) from a v2
+// one with nothing in use.
+export const SCHEMA_VERSION = 2;
 
 export interface FileCounts {
   file: string;
@@ -10,6 +13,12 @@ export interface FileCounts {
   other: number;
   styledHosts: number;
   unstyledHosts: number;
+  /**
+   * DS instances in this file by component name. Folded into the report-level
+   * `usage` and left out of the emitted `files` — the JSON stays proportional
+   * to the UI surface, not to components × files.
+   */
+  usage?: Record<string, number>;
   /** File couldn't be parsed even with errorRecovery — zero counts mean "couldn't look". */
   parseFailed?: true;
 }
@@ -52,6 +61,12 @@ export interface ReachReport {
   /** DS / (DS + other components), ignoring styled hosts. Transparency only. */
   componentsOnlyScore: number;
   counts: ReachCounts;
+  /**
+   * DS instances per component across the repo, most-used first. Sums to
+   * `counts.dsInstances`. `Table.Row` counts toward `Table`; renames resolve
+   * to the exported name. Ties break alphabetically so the JSON is stable.
+   */
+  usage: Record<string, number>;
   leaks: LeakCounts;
   files: FileCounts[];
 }
@@ -68,8 +83,12 @@ export function emptyFileCounts(file: string): FileCounts {
 export function tallyInstances(file: string, instances: Instance[]): FileCounts {
   const counts = emptyFileCounts(file);
   for (const inst of instances) {
-    if (inst.kind === 'ds') counts.ds++;
-    else if (inst.kind === 'other') counts.other++;
+    if (inst.kind === 'ds') {
+      counts.ds++;
+      const name = inst.component ?? inst.element;
+      counts.usage ??= {};
+      counts.usage[name] = (counts.usage[name] ?? 0) + 1;
+    } else if (inst.kind === 'other') counts.other++;
     else if (inst.kind === 'styled-host') counts.styledHosts++;
     else counts.unstyledHosts++;
   }
@@ -86,7 +105,11 @@ export function buildReport(
   let styledHosts = 0;
   let unstyledHosts = 0;
   let filesFailed = 0;
+  const tally = new Map<string, number>();
   for (const f of files) {
+    for (const [name, n] of Object.entries(f.usage ?? {})) {
+      tally.set(name, (tally.get(name) ?? 0) + n);
+    }
     ds += f.ds;
     other += f.other;
     styledHosts += f.styledHosts;
@@ -109,11 +132,15 @@ export function buildReport(
       filesScanned,
       filesFailed,
     },
+    usage: Object.fromEntries(
+      [...tally].sort(([an, ac], [bn, bc]) => bc - ac || (an < bn ? -1 : an > bn ? 1 : 0)),
+    ),
     leaks: leaks ?? { total: 0, hexColors: 0, pxValues: 0, items: [] },
     // Only files that contributed something (or failed to parse) appear —
     // keeps the JSON proportional to the UI surface, not the repo size.
     files: files
       .filter((f) => f.ds + f.other + f.styledHosts + f.unstyledHosts > 0 || f.parseFailed)
+      .map(({ usage: _usage, ...rest }) => rest)
       .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)),
   };
 }

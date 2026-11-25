@@ -5,6 +5,12 @@ export interface ImportBinding {
   source: string;
   /** What was bound: a named export, the default export, or a namespace. */
   kind: 'named' | 'default' | 'namespace';
+  /**
+   * The exported name a named import binds, before any rename: `Button` for
+   * `import { Button as Btn }`. Absent for default and namespace imports,
+   * which have no export name of their own.
+   */
+  imported?: string;
 }
 
 /** localName in this file → where it came from. */
@@ -22,7 +28,9 @@ export function buildImportMap(ast: Ast): ImportMap {
     const source = node.source.value;
     for (const spec of node.specifiers) {
       if (spec.type === 'ImportSpecifier') {
-        map.set(spec.local.name, { source, kind: 'named' });
+        const imported =
+          spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value;
+        map.set(spec.local.name, { source, kind: 'named', imported });
       } else if (spec.type === 'ImportDefaultSpecifier') {
         map.set(spec.local.name, { source, kind: 'default' });
       } else if (spec.type === 'ImportNamespaceSpecifier') {

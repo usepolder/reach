@@ -20,7 +20,7 @@ Leaks: 87   (61 hex colors, 26 px values)
   Top offenders: src/styles/legacy.css (34), src/components/Hero.tsx (12)
 ```
 
-Zero config beyond your design system's package name. Add `--json` for the full machine-readable report. See it running on a real repo: [usepolder/reach-demo](https://github.com/usepolder/reach-demo).
+Zero config beyond your design system's package name. Add `--json` for the full machine-readable report, including `usage`: DS instances per component (`Table.Row` counts toward `Table`; `Button as Btn` counts as `Button`), which [Current](https://github.com/usepolder/current) uses to rank what to fix first. See it running on a real repo: [usepolder/reach-demo](https://github.com/usepolder/reach-demo).
 
 ## The metric
 
